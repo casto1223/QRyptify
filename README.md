@@ -7,9 +7,17 @@ Description:
 
 -----------------------
 
+Tutorials:
+  YouTube DEMO for the encoding and decoding one: COMING SOON
+  YouTube DEMO for the encoding only one: COMING SOON
+  
+-----------------------
+
 STATUS: YES (simply launch the html with your preferred browser) 
   **note: the browser must have Javascript enabled...
 
 -----------------------
 
-TODO:
+TODO: 
+  - beautify the UI, polish app
+  - make YT DEMOS for both apps
