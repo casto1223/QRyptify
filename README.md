@@ -8,8 +8,8 @@ Description:
 -----------------------
 
 Tutorials:
-  YouTube DEMO for the encoding and decoding one: COMING SOON
-  YouTube DEMO for the encoding only one: COMING SOON
+  - YouTube DEMO for the encoding and decoding one: COMING SOON
+  - YouTube DEMO for the encoding only one: COMING SOON
   
 -----------------------
 
