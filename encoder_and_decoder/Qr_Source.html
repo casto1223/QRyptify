@@ -1,0 +1,208 @@
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>QRCode</title>
+    <meta charset="UTF-8" />
+  </head>
+	<style>
+	#camera{
+		width: 350px;
+		height: 350px;
+		border: 1px solid black;
+	}
+	</style>  
+  <body>
+    <div class="main">
+      <ul class="content clearfix">
+        <li class="encode selected">
+          <p>ENCODER：</p>
+          <div><textarea id="encode-text" rows="10" cols="80">Enter Text</textarea></div>
+            <input type="hidden" id="encoding-hint" value="Auto"  />
+			<input type="hidden" id="encode-mode" value="Auto" />
+          <p>
+            <button id="encode-btn">Encode</button>
+          </p>
+          <div id="encode-result" class="encode-result hide"></div>
+        </li>
+		<hr>
+		<li>
+		<p id="seee">CAMERA：</p>
+		<div id="camera"></div>
+		<button onclick="take_snapshot_and_decode()">Take Snapshot and Decode</button>
+		</li>
+		<hr>
+        <li class="decode">
+          <p><label>DECODER：</label></p>
+          <div>
+            <canvas id="decode-canvas"></canvas>
+          </div>
+          <p id="decode-text" class="hide">Decoded Text：<br /><br /><textarea readonly rows="10" cols="80"></textarea></p>
+        </li>
+      </ul>
+    </div>
+  </body>
+    <script src="./jquery.slim.min.js"></script>
+    <script type="text/javascript">
+      if (self.Uint8ClampedArray) {
+        if (!Uint8ClampedArray.from) {
+          Uint8ClampedArray.from = function (array) {
+            return new Uint8ClampedArray(array);
+          };
+        }
+
+        if (!Uint8ClampedArray.prototype.forEach) {
+          var APForEach = Array.prototype.forEach;
+
+          Uint8ClampedArray.prototype.forEach = function (callback, context) {
+            return APForEach.call(this, callback, context);
+          };
+        }
+      }
+    </script>
+    <script type="text/javascript" src="./qrcode.js"></script>
+    <script type="text/javascript">
+    
+      var nav = $('.tabs li');
+      var content = $('.content li');
+
+      nav.on('click', function () {
+        var target = $(this);
+
+        nav.removeClass('selected');
+
+        target.addClass('selected');
+
+        content.removeClass('selected').eq(target.index()).addClass('selected');
+		});
+
+      var TEST_NUMERIC = /^\d+$/;
+      var TEST_ALPHANUMERIC = /^[0-9A-Z$%*+-./: ]+$/;
+
+      function chooseBestModeData(data) {
+        if (TEST_NUMERIC.test(data)) {
+          return new QRCode.QRNumeric(data);
+        } else if (TEST_ALPHANUMERIC.test(data)) {
+          return new QRCode.QRAlphanumeric(data);
+        }
+
+        try {
+          return new QRCode.QRKanji(data);
+        } catch (error) {
+          return new QRCode.QRByte(data);
+        }
+      }
+
+      var encodeText = $('#encode-text');
+      var encodeMode = $('#encode-mode');
+      var encodingHint = $('#encoding-hint');
+      var encodeECLevel = $('#encode-eclevel');
+      
+   
+      var encodeResult = $('#encode-result');
+
+    
+      $('#encode-btn').on('click', function () {
+        var data = encodeText.val();
+        var mode = encodeMode.val();
+        var ecLevel = encodeECLevel.val();
+		
+      
+       
+        var hasEncodingHint = encodingHint.prop('checked');
+
+        if (!data) {
+          encodeResult.addClass('hide');
+
+          return alert('Enter text to be encoded');
+        }
+
+        var qrcode = new QRCode.Encoder();
+        var errorCorrectionLevel = QRCode.ErrorCorrectionLevel['H'];
+
+        qrcode.setEncodingHint(hasEncodingHint).setErrorCorrectionLevel(errorCorrectionLevel);
+
+        try {
+          var data = mode === 'Auto' ? chooseBestModeData(data) : new QRCode[mode](data);
+          qrcode.write(data).make();
+
+          encodeResult.html('<img src="' + qrcode.toDataURL(10, 12) + '" />');
+          encodeResult.removeClass('hide');
+
+          console && console.log(qrcode);
+        } catch (error) {
+          encodeResult.addClass('hide');
+
+          alert(error.message);
+        }
+      });
+
+      var hasImage = false;
+      var imageData = null;
+      var decodeText = $('#decode-text');
+      var canvas = $('#decode-canvas')[0];
+      var context = canvas.getContext('2d');
+      var decodeResult = decodeText.find('textarea');
+
+    
+ 
+      
+
+      /https?:/i.test(location.protocol) && drawImage('./qrcode.jpg');
+    </script>
+  	<script src="./webcam.js"></script>
+	<script type="text/javascript">	
+	function drawImage(src) {
+        var img = new Image();
+        img.crossOrigin = 'anonymous';
+		
+        img.onload = function () {
+			var width = img.width;
+			var height = img.height;
+			var actualWidth = Math.min(960, width);
+			var actualHeight = height * (actualWidth / width);
+			hasImage = true;
+			canvas.width = actualWidth;
+			canvas.height = actualHeight;
+			context.drawImage(img, 0, 0, width, height, 0, 0, actualWidth, actualHeight);
+			imageData = context.getImageData(0, 0, actualWidth, actualHeight);
+		  
+			var yy = context.getImageData(0, 0, canvas.width, canvas.height);
+			var rr = new QRCode.Decoder()
+				.setOptions({ canOverwriteImage: false })
+				.decode(yy.data, yy.width, yy.height);
+	
+			if (rr) {
+				decodeResult.val(rr.data);
+				//console && console.log(rr);
+			} else {
+				alert('Please Try Again');
+			}
+		  
+        };
+
+        img.src = src;
+      }
+	
+	function resetDecoder() {
+        hasImage = false;
+        imageData = null;
+    }
+	  
+	Webcam.set({
+		width: 350,
+		height:265,
+		image_format:'jpeg',
+		jpeg_quality:150
+	})
+	
+	Webcam.attach("#camera")
+	function take_snapshot_and_decode(){
+		resetDecoder();
+	
+		Webcam.snap(function(data_uri){
+			drawImage(data_uri);
+		})
+	}
+	</script>
+</html>
